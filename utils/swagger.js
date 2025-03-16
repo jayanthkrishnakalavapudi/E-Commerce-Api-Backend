@@ -14,11 +14,18 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:5000/api',
+        url: 'http://localhost:5000',
         description: 'Development server'
       }
     ],
     components: {
+      securitySchemes: {
+        BearerAuth: {  // 🔹 Adding Bearer Token Authentication
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        }
+      },
       schemas: {
         Customer: {
           type: 'object',
@@ -56,47 +63,14 @@ const options = {
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' }
           }
-        },
-        Order: {
-          type: 'object',
-          required: ['customerId', 'items'],
-          properties: {
-            _id: { type: 'string', description: 'Auto-generated MongoDB ID' },
-            customerId: { type: 'string', description: 'Reference to Customer ID' },
-            orderDate: { type: 'string', format: 'date-time' },
-            status: {
-              type: 'string',
-              enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
-              default: 'pending'
-            },
-            items: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  productId: { type: 'string', description: 'Reference to Product ID' },
-                  quantity: { type: 'integer', minimum: 1 },
-                  price: { type: 'number', format: 'float' }
-                }
-              }
-            },
-            shippingAddress: {
-              type: 'object',
-              properties: {
-                street: { type: 'string' },
-                city: { type: 'string' },
-                state: { type: 'string' },
-                zipCode: { type: 'string' },
-                country: { type: 'string' }
-              }
-            },
-            totalAmount: { type: 'number', format: 'float' },
-            createdAt: { type: 'string', format: 'date-time' },
-            updatedAt: { type: 'string', format: 'date-time' }
-          }
         }
       }
     },
+    security: [  // 🔹 Apply security globally
+      {
+        BearerAuth: []
+      }
+    ],
     tags: [
       { name: 'Customers', description: 'Customer management endpoints' },
       { name: 'Products', description: 'Product catalog endpoints' },
