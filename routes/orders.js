@@ -17,7 +17,6 @@ router.route('/:id')
   .put(updateOrder)
   .delete(cancelOrder);
 
-router.route('/:id/tracking')
-  .get(getOrderTracking);
+
 
 module.exports = router;
