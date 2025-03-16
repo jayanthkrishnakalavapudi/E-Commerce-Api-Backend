@@ -6,6 +6,8 @@ const {
   updateProduct,
   deleteProduct
 } = require('../controllers/productController');
+const { getRecommendations } = require('../services/recommendationService');
+
 
 const router = express.Router();
 
@@ -167,6 +169,48 @@ router.route('/')
  *       500:
  *         description: Server error
  */
+
+/**
+ * @swagger
+ * /api/products/recommendations:
+ *   get:
+ *     summary: Get product recommendations
+ *     tags: [Products]
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: The category to get recommendations from
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of recommendations to retrieve
+ *     responses:
+ *       200:
+ *         description: Recommendations retrieved successfully
+ *       404:
+ *         description: No recommendations found
+ *       500:
+ *         description: Server error
+ */
+router.get('/recommendations', async (req, res) => {
+  try {
+      const { category, limit } = req.query;
+      const recommendations = await getRecommendations(category, limit);
+
+      if (!recommendations.length) {
+          return res.status(404).json({ success: false, error: "No recommendations found" });
+      }
+
+      res.json({ success: true, data: recommendations });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, error: "Server error" });
+  }
+});
+
 router.route('/:id')
   .get(getProduct)
   .put(updateProduct)
