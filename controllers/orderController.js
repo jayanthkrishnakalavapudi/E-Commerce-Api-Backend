@@ -144,26 +144,7 @@ exports.updateOrder = async (req, res, next) => {
   }
 };
 
-/**
- * @swagger
- * /api/orders/{id}:
- *   delete:
- *     summary: Cancel an order
- *     tags: [Orders]
- *     description: Cancels an existing order
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: The order ID
- *     responses:
- *       200:
- *         description: Order canceled successfully
- *       404:
- *         description: Order not found
- */
+
 exports.cancelOrder = async (req, res, next) => {
   try {
     const order = await orderService.cancelOrder(req.params.id);
