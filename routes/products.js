@@ -7,7 +7,7 @@ const {
   deleteProduct
 } = require('../controllers/productController');
 const { getRecommendations } = require('../services/recommendationService');
-
+const { getTrackingInfo } = require('../services/shippingService');
 
 const router = express.Router();
 
@@ -210,6 +210,44 @@ router.get('/recommendations', async (req, res) => {
       res.status(500).json({ success: false, error: "Server error" });
   }
 });
+
+/**
+ * @swagger
+ * /api/orders/{orderId}/tracking:
+ *   get:
+ *     summary: Get shipping status and tracking information
+ *     tags: [Orders]
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The order ID to track
+ *     responses:
+ *       200:
+ *         description: Tracking information retrieved successfully
+ *       404:
+ *         description: Order not found or tracking unavailable
+ *       500:
+ *         description: Server error
+ */
+router.get('/:orderId/tracking', async (req, res) => {
+  try {
+      const { orderId } = req.params;
+      const trackingInfo = await getTrackingInfo(orderId);
+
+      if (!trackingInfo) {
+          return res.status(404).json({ success: false, error: "Tracking information not found" });
+      }
+
+      res.json({ success: true, data: trackingInfo });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, error: "Server error" });
+  }
+});
+
 
 router.route('/:id')
   .get(getProduct)
