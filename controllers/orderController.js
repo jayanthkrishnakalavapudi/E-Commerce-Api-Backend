@@ -4,7 +4,57 @@ const Product = require('../models/Product');
 const logger = require('../utils/logger');
 const orderService = require('../services/orderService');
 
+/**
+ * @swagger
+ * tags:
+ *   name: Orders
+ *   description: Order management endpoints
+ */
 
+/**
+ * @swagger
+ * /api/customers/{customerId}/orders:
+ *   get:
+ *     summary: Get all orders for a customer
+ *     tags: [Orders]
+ *     description: Retrieves a paginated list of orders for a specific customer
+ *     parameters:
+ *       - in: path
+ *         name: customerId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the customer
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: The page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of orders per page
+ *     responses:
+ *       200:
+ *         description: A list of customer orders
+ */
+exports.getCustomerOrders = async (req, res, next) => {
+  try {
+    const customerId = req.params.customerId;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    
+    const result = await orderService.getCustomerOrders(customerId, page, limit);
+    
+    res.status(200).json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 /**
  * @swagger
@@ -144,7 +194,26 @@ exports.updateOrder = async (req, res, next) => {
   }
 };
 
-
+/**
+ * @swagger
+ * /api/orders/{id}:
+ *   delete:
+ *     summary: Cancel an order
+ *     tags: [Orders]
+ *     description: Cancels an existing order
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The order ID
+ *     responses:
+ *       200:
+ *         description: Order canceled successfully
+ *       404:
+ *         description: Order not found
+ */
 exports.cancelOrder = async (req, res, next) => {
   try {
     const order = await orderService.cancelOrder(req.params.id);
