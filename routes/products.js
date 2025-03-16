@@ -6,7 +6,6 @@ const {
   updateProduct,
   deleteProduct
 } = require('../controllers/productController');
-const RecommendationService = require('../services/recommendationService');
 const ShippingService = require('../services/shippingService'); // Import ShippingService
 const Order = require('../models/Order');
 
@@ -44,28 +43,7 @@ router.route('/:id')
   .put(updateProduct)
   .delete(deleteProduct);
 
-/**
- * @swagger
- * /api/products/recommendations/{customerId}:
- *   get:
- *     summary: Get product recommendations for a customer
- *     tags: [Products]
- */
-router.get('/recommendations/:customerId', async (req, res) => {
-    try {
-        const { customerId } = req.params;
-        const recommendations = await RecommendationService.getCustomerRecommendations(customerId);
 
-        if (!recommendations || recommendations.length === 0) {
-            return res.status(404).json({ success: false, message: "No recommendations found" });
-        }
-
-        res.json({ success: true, data: recommendations });
-    } catch (error) {
-        console.error('❌ Recommendation Error:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
 
 /**
  * @swagger
