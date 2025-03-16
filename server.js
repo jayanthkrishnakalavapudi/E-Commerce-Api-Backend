@@ -58,7 +58,7 @@ const productRoutes = require('./routes/products');
 app.use('/api/customers', customerRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
 
 // ✅ Swagger API Documentation Setup
 const swaggerOptions = {

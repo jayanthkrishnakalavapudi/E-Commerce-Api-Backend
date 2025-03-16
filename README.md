@@ -29,11 +29,12 @@ A **RESTful** and **GraphQL** API for an **e-commerce order management system**.
 Create a `.env` file in the root directory and configure the following:
 
 ```sh
-MONGO_URI=mongodb+srv://your_username:your_password@your-cluster.mongodb.net/ecommerce-api?retryWrites=true&w=majority
+MONGO_URI=mongodb+srv://jayanth:fT4t1QcuGAG0NAPj@cluster0.k57vc.mongodb.net/ecommerce-api?retryWrites=true&w=majority&appName=Cluster0
 PORT=5000
-JWT_SECRET=your_jwt_secret
+JWT_SECRET=89072b77e5162146f0f1640c76522fb3818b13ef08a25d5054280b0663e61500ab31411ab779756d20fbb09025d2e1b51bd3960aa4e291d9339d6937aa109743
 JWT_EXPIRE=30d
-JWT_COOKIE_EXPIRE=7
+JWT_COOKIE_EXPIRE=30
+
 
 ```
 
