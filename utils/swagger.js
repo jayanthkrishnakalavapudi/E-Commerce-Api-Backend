@@ -26,6 +26,11 @@ const options = {
           bearerFormat: 'JWT'
         }
       },
+      security: [
+        {
+          BearerAuth: []
+        }
+      ],
       schemas: {
         Customer: {
           type: 'object',
