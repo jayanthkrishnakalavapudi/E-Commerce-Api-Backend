@@ -243,38 +243,43 @@ exports.getCustomerRecommendations = async (req, res, next) => {
     const customerId = req.params.id;
     const limit = parseInt(req.query.limit, 10) || 5;
     
-    // Skip the customer existence check and go straight to recommendations
-    // The RecommendationService will handle cases where orders don't exist
-    const recommendations = await RecommendationService.getCustomerRecommendations(customerId);
+    console.log(`🔍 Getting recommendations for customer: ${customerId}`);
     
-    // Apply the limit parameter
-    const limitedRecommendations = recommendations.slice(0, limit);
-
-    res.status(200).json({
-      success: true,
-      count: limitedRecommendations.length,
-      data: limitedRecommendations
-    });
-  } catch (error) {
-    console.error('Error in getCustomerRecommendations:', error);
-    
-    // If there's a specific error about customer not found, handle it
-    if (error.statusCode === 404) {
+    // First verify the customer exists
+    try {
+      await CustomerService.getCustomerById(customerId);
+      console.log(`✅ Customer verified: ${customerId}`);
+    } catch (error) {
+      console.error(`❌ Customer verification failed: ${error.message}`);
       return res.status(404).json({ 
         success: false, 
         error: 'Customer not found' 
       });
     }
     
-    // Handle recommendation service errors
-    if (error.message === 'Unable to retrieve product recommendations at this time') {
+    // Get recommendations using the recommendation service
+    try {
+      const recommendations = await RecommendationService.getCustomerRecommendations(customerId);
+      console.log(`📊 Recommendations received: ${recommendations.length}`);
+      
+      // Apply the limit parameter
+      const limitedRecommendations = recommendations.slice(0, limit);
+      
+      return res.status(200).json({
+        success: true,
+        count: limitedRecommendations.length,
+        data: limitedRecommendations
+      });
+    } catch (error) {
+      console.error(`❌ Error fetching recommendations: ${error.message}`);
       return res.status(503).json({ 
         success: false, 
         error: 'Recommendation service unavailable', 
         message: error.message 
       });
     }
-    
+  } catch (error) {
+    console.error(`❌ Unexpected error: ${error.message}`);
     next(error);
   }
 };
