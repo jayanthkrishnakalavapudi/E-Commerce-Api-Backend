@@ -14,12 +14,11 @@ const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./routes/auth');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
-const DataLoader = require('dataloader');
 
 // ✅ Import DataLoaders
-const customerLoader = require('./graphql/dataloaders/customerLoader');
-const orderLoader = require('./graphql/dataloaders/orderLoader');
-const productLoader = require('./graphql/dataloaders/productLoader');
+const createCustomerLoader = require('./graphql/dataloaders/customerLoader');
+const { createOrderLoader, createCustomerOrdersLoader } = require('./graphql/dataloaders/orderLoader');
+const createProductLoader = require('./graphql/dataloaders/productLoader');
 
 // Load environment variables
 dotenv.config();
@@ -49,7 +48,7 @@ mongoose
   .then(() => logger.info('✅ MongoDB connected'))
   .catch((err) => {
     logger.error('❌ MongoDB connection error:', err);
-    process.exit(1);
+    process.exit(1); // Exit process if DB connection fails
   });
 
 // Import routes
@@ -92,8 +91,13 @@ async function startApolloServer() {
     const typesArray = loadFilesSync(path.join(__dirname, 'graphql/schema'));
     const resolversArray = loadFilesSync(path.join(__dirname, 'graphql/resolvers'));
 
+    console.log('🔍 Loaded TypeDefs:', typesArray);
+    console.log('🔍 Loaded Resolvers:', resolversArray);
+
     const typeDefs = mergeTypeDefs(typesArray);
     const resolvers = mergeResolvers(resolversArray);
+
+    console.log('✅ Merged TypeDefs and Resolvers');
 
     const schema = makeExecutableSchema({
       typeDefs,
@@ -105,18 +109,18 @@ async function startApolloServer() {
       schema,
       context: ({ req }) => {
         const token = req.headers.authorization || '';
-
         return {
           token,
           loaders: {
-            customerLoader: new DataLoader((keys) => customerLoader.batchCustomers(keys)),
-            orderLoader: new DataLoader((keys) => orderLoader.batchOrders(keys)),
-            productLoader: new DataLoader((keys) => productLoader.batchProducts(keys)),
+            customerLoader: createCustomerLoader(),
+            orderLoader: createOrderLoader(),  // ✅ Correctly initialize orderLoader
+            customerOrdersLoader: createCustomerOrdersLoader(), // ✅ Correct customer orders loader
+            productLoader: createProductLoader(),
           },
         };
       },
-      introspection: true,
-      plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
+      introspection: true, // ✅ Enables schema exploration
+      plugins: [ApolloServerPluginLandingPageGraphQLPlayground()], // ✅ Enables GraphQL Playground
       formatError: (error) => {
         logger.error('GraphQL Error:', error);
         return {
@@ -130,7 +134,9 @@ async function startApolloServer() {
     await server.start();
     server.applyMiddleware({ app, path: '/graphql' });
 
-    logger.info(`🚀 GraphQL Server running at http://localhost:${process.env.PORT || 5000}${server.graphqlPath}`);
+    logger.info(
+      `🚀 GraphQL Server running at http://localhost:${process.env.PORT || 5000}${server.graphqlPath}`
+    );
   } catch (error) {
     logger.error('Failed to start Apollo Server:', error);
   }
