@@ -35,7 +35,7 @@ const typeDefs = gql`
 
   type OrderItem {
     id: ID
-    product: Product!
+    product: Product
     quantity: Int!
     price: Float!
   }
