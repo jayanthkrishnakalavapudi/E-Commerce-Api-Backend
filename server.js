@@ -17,6 +17,7 @@ const swaggerJsdoc = require('swagger-jsdoc');
 
 // ✅ Import DataLoaders correctly
 const createCustomerLoader = require('./graphql/dataloaders/customerLoader');
+const createProductLoader = require('./graphql/dataloaders/productLoader');
 const { createOrderLoader, createCustomerOrdersLoader } = require('./graphql/dataloaders/orderLoader');
 
 // Load environment variables
@@ -115,6 +116,7 @@ async function startApolloServer() {
             customerLoader: createCustomerLoader(),  // ✅ Now correctly calling the function
             orderLoader: createOrderLoader(),
             customerOrdersLoader: createCustomerOrdersLoader(),
+            productLoader: createProductLoader(), // Add this line
           },
         };
       },

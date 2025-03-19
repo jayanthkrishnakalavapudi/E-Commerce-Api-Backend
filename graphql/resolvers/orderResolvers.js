@@ -49,20 +49,34 @@ const orderResolvers = {
   OrderItem: {
     product: async (orderItem, _, { loaders }) => {
       try {
+        // Check if product reference exists
         if (!orderItem.product) {
-          throw new ApolloError('Product reference is missing for this order item');
+          console.log('Missing product reference for order item:', orderItem);
+          return null;
         }
         
+        // Check if loader exists
+        if (!loaders || !loaders.productLoader) {
+          console.error('Product loader not found in context');
+          throw new ApolloError('Product data loader not available');
+        }
+        
+        // Convert ObjectId to string if needed
         const productId = orderItem.product.toString();
+        
+        // Load the product using DataLoader
         const product = await loaders.productLoader.load(productId);
         
         if (!product) {
-          throw new ApolloError(`Product with ID ${productId} not found`);
+          console.log(`Product with ID ${productId} not found`);
+          return null;
         }
         
         return product;
       } catch (error) {
-        throw new ApolloError('Failed to load product data');
+        console.error('Error loading product:', error.message);
+        // Return null instead of throwing to prevent breaking the entire response
+        return null;
       }
     }
   }
