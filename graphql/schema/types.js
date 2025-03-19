@@ -42,7 +42,7 @@ const typeDefs = gql`
 
   type Order {
     id: ID!
-    customer: Customer!
+    customer: Customer
     orderDate: String!
     status: String!
     items: [OrderItem!]!
