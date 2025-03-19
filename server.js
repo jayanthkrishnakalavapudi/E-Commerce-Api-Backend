@@ -25,9 +25,9 @@ dotenv.config();
 // Create Express app
 const app = express();
 
-// ✅ Improved CORS configuration
+// ✅ Explicitly Allow CORS from Anywhere
 app.use(cors({
-  origin: '*', // Allow all origins (Modify in production)
+  origin: '*', // Allow requests from any domain
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -38,7 +38,7 @@ app.use(morgan('combined', { stream: { write: message => logger.info(message.tri
 // Body parser
 app.use(express.json());
 
-// ✅ MongoDB Connection
+// MongoDB connection
 const MONGO_URI = process.env.MONGO_URI;
 mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
@@ -49,7 +49,7 @@ mongoose.connect(MONGO_URI, {
   .then(() => logger.info('✅ MongoDB connected'))
   .catch(err => {
     logger.error('❌ MongoDB connection error:', err);
-    process.exit(1); // Exit process if DB connection fails
+    process.exit(1);
   });
 
 // Import routes
@@ -130,7 +130,7 @@ async function startApolloServer() {
     });
 
     await server.start();
-    server.applyMiddleware({ app, path: '/graphql', cors: false });
+    server.applyMiddleware({ app, path: '/graphql', cors: false }); // ✅ Allow CORS for GraphQL
 
     logger.info(`🚀 GraphQL Server running at ${process.env.SERVER_URL || 'http://localhost:5000'}${server.graphqlPath}`);
   } catch (error) {
