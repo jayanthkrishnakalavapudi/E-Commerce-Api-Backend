@@ -45,6 +45,27 @@ const orderResolvers = {
       }
     },
   },
+
+  OrderItem: {
+    product: async (orderItem, _, { loaders }) => {
+      try {
+        if (!orderItem.product) {
+          throw new ApolloError('Product reference is missing for this order item');
+        }
+        
+        const productId = orderItem.product.toString();
+        const product = await loaders.productLoader.load(productId);
+        
+        if (!product) {
+          throw new ApolloError(`Product with ID ${productId} not found`);
+        }
+        
+        return product;
+      } catch (error) {
+        throw new ApolloError('Failed to load product data');
+      }
+    }
+  }
 };
 
 module.exports = orderResolvers;
