@@ -6,26 +6,7 @@ const orderService = require('../services/orderService');
 
 
 
-/**
- * @swagger
- * /api/orders/{id}:
- *   get:
- *     summary: Get a single order by ID
- *     tags: [Orders]
- *     description: Fetches the details of a specific order
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: The order ID
- *     responses:
- *       200:
- *         description: Order details retrieved successfully
- *       404:
- *         description: Order not found
- */
+
 exports.getOrder = async (req, res, next) => {
   try {
     const order = await orderService.getOrderDetails(req.params.id);
