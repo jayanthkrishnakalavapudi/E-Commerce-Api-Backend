@@ -20,9 +20,6 @@ router.route('/:id')
   .get(getCustomer);
 
   router.route('/:customerId/recommendations')
-  .get((req, res) => {
-    console.log("✅ Recommendation API hit with customerId:", req.params.customerId);
-    res.json({ message: "Test response" });
-  });
+  .get(getCustomerRecommendations);
 
 module.exports = router;
