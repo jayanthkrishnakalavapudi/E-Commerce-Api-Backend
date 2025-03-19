@@ -211,6 +211,78 @@ exports.deleteCustomer = async (req, res, next) => {
   }
 };
 
+/**
+ * @swagger
+ * /api/customers/{id}/recommendations:
+ *   get:
+ *     summary: Get product recommendations for a customer
+ *     tags: [Customers]
+ *     description: Retrieves personalized product recommendations for a specific customer
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The customer ID
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Maximum number of recommendations to return
+ *     responses:
+ *       200:
+ *         description: List of product recommendations
+ *       404:
+ *         description: Customer not found
+ *       503:
+ *         description: Recommendation service unavailable
+ */
+exports.getCustomerRecommendations = async (req, res, next) => {
+  try {
+    const customerId = req.params.customerId || req.params.id;
+    const limit = parseInt(req.query.limit, 10) || 5;
+    
+    console.log(`🔍 Getting recommendations for customer: ${customerId}`);
+    
+    // First verify the customer exists
+    try {
+      await CustomerService.getCustomerById(customerId);
+      console.log(`✅ Customer verified: ${customerId}`);
+    } catch (error) {
+      console.error(`❌ Customer verification failed: ${error.message}`);
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Customer not found' 
+      });
+    }
+    
+    // Get recommendations using the recommendation service
+    try {
+      const recommendations = await RecommendationService.getCustomerRecommendations(customerId);
+      console.log(`📊 Recommendations received: ${recommendations.length}`);
+      
+      // Apply the limit parameter
+      const limitedRecommendations = recommendations.slice(0, limit);
+      
+      return res.status(200).json({
+        success: true,
+        count: limitedRecommendations.length,
+        data: limitedRecommendations
+      });
+    } catch (error) {
+      console.error(`❌ Error fetching recommendations: ${error.message}`);
+      return res.status(503).json({ 
+        success: false, 
+        error: 'Recommendation service unavailable', 
+        message: error.message 
+      });
+    }
+  } catch (error) {
+    console.error(`❌ Unexpected error: ${error.message}`);
+    next(error);
+  }
+};
 
 /**
  * @swagger

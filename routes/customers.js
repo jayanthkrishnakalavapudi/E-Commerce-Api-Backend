@@ -2,11 +2,9 @@ const express = require('express');
 const {
   getCustomers,
   getCustomer,
-  createCustomer,
-  updateCustomer,
-  deleteCustomer,
-  getCustomerRecommendations
+  createCustomer
 } = require('../controllers/customerController');
+const { getCustomerRecommendations } = require('../controllers/recommendationController');
 const orderRoutes = require('./orders');
 
 const router = express.Router();
@@ -19,11 +17,12 @@ router.route('/')
   .post(createCustomer);
 
 router.route('/:id')
-  .get(getCustomer)
-  .put(updateCustomer)
-  .delete(deleteCustomer);
+  .get(getCustomer);
 
-router.route('/:customerId/recommendations')
-  .get(getCustomerRecommendations);
+  router.route('/:customerId/recommendations')
+  .get((req, res) => {
+    console.log("✅ Recommendation API hit with customerId:", req.params.customerId);
+    res.json({ message: "Test response" });
+  });
 
 module.exports = router;
