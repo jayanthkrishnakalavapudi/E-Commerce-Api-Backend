@@ -19,6 +19,7 @@ const DataLoader = require('dataloader');
 // ✅ Import DataLoaders
 const customerLoader = require('./graphql/dataloaders/customerLoader');
 const orderLoader = require('./graphql/dataloaders/orderLoader');
+const createProductLoader = require('./graphql/dataloaders/productLoader');
 
 // Load environment variables
 dotenv.config();
@@ -113,6 +114,7 @@ async function startApolloServer() {
         return {
           token,
           loaders: {
+            productLoader: createProductLoader(), // ✅ Ensuring productLoader is included
             customerLoader,
             customerOrdersLoader: new DataLoader((keys) => orderLoader.batchOrders(keys)),
           },
