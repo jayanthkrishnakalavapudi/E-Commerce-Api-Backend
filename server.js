@@ -25,8 +25,12 @@ dotenv.config();
 // Create Express app
 const app = express();
 
-// ✅ Add CORS Middleware
-app.use(cors());
+// ✅ Improved CORS configuration
+app.use(cors({
+  origin: '*', // Allow all origins (Modify in production)
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 // Middleware for logging HTTP requests
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
@@ -34,9 +38,8 @@ app.use(morgan('combined', { stream: { write: message => logger.info(message.tri
 // Body parser
 app.use(express.json());
 
-// MongoDB connection
+// ✅ MongoDB Connection
 const MONGO_URI = process.env.MONGO_URI;
-
 mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -71,8 +74,8 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'http://localhost:5000',
-        description: 'Development Server',
+        url: process.env.SERVER_URL || 'http://localhost:5000',
+        description: 'Production Server',
       },
     ],
   },
@@ -127,9 +130,9 @@ async function startApolloServer() {
     });
 
     await server.start();
-    server.applyMiddleware({ app, path: '/graphql' });
+    server.applyMiddleware({ app, path: '/graphql', cors: false });
 
-    logger.info(`🚀 GraphQL Server running at http://localhost:${process.env.PORT || 5000}${server.graphqlPath}`);
+    logger.info(`🚀 GraphQL Server running at ${process.env.SERVER_URL || 'http://localhost:5000'}${server.graphqlPath}`);
   } catch (error) {
     logger.error('Failed to start Apollo Server:', error);
   }
