@@ -130,21 +130,6 @@ exports.login = async (req, res, next) => {
   }
 };
 
-/**
- * @swagger
- * /auth/me:
- *   get:
- *     summary: Get current logged-in user
- *     tags: [Authentication]
- *     security:
- *       - BearerAuth: []
- *     description: Returns the currently authenticated user's details
- *     responses:
- *       200:
- *         description: User data retrieved successfully
- *       401:
- *         description: Unauthorized, invalid token
- */
 exports.getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
