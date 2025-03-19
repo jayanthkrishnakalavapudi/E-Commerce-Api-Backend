@@ -1,5 +1,4 @@
 const CustomerService = require('../services/customerService');
-const RecommendationService = require('../services/recommendationService');
 
 /**
  * @swagger
@@ -210,57 +209,6 @@ exports.deleteCustomer = async (req, res, next) => {
     next(error);
   }
 };
-
-/**
- * @swagger
- * /api/customers/{id}/recommendations:
- *   get:
- *     summary: Get product recommendations for a customer
- *     tags: [Customers]
- *     description: Retrieves personalized product recommendations for a specific customer
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: The customer ID
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *         description: Maximum number of recommendations to return
- *     responses:
- *       200:
- *         description: List of product recommendations
- *       404:
- *         description: Customer not found
- *       503:
- *         description: Recommendation service unavailable
- */
-exports.getCustomerRecommendations = async (req, res, next) => {
-  try {
-    const customerId = req.params.id;
-    
-    console.log(`Fetching recommendations for customer ID: ${customerId}`);
-
-    const recommendations = await RecommendationService.getCustomerRecommendations(customerId);
-    
-    if (!recommendations || recommendations.length === 0) {
-      return res.status(200).json({ message: "No recommendations found" });
-    }
-
-    return res.status(200).json({
-      success: true,
-      count: recommendations.length,
-      data: recommendations
-    });
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
-    return res.status(500).json({ error: "Internal Server Error" });
-  }
-};
-
 
 /**
  * @swagger
