@@ -243,17 +243,8 @@ exports.getCustomerRecommendations = async (req, res, next) => {
     const customerId = req.params.id;
     const limit = parseInt(req.query.limit, 10) || 5;
     
-    // First check if the customer exists using your existing service
-    try {
-      await CustomerService.getCustomerById(customerId);
-    } catch (error) {
-      if (error.statusCode === 404) {
-        return res.status(404).json({ success: false, error: 'Customer not found' });
-      }
-      throw error;
-    }
-    
-    // Now get recommendations using your recommendation service
+    // Skip the customer existence check and go straight to recommendations
+    // The RecommendationService will handle cases where orders don't exist
     const recommendations = await RecommendationService.getCustomerRecommendations(customerId);
     
     // Apply the limit parameter
@@ -266,6 +257,16 @@ exports.getCustomerRecommendations = async (req, res, next) => {
     });
   } catch (error) {
     console.error('Error in getCustomerRecommendations:', error);
+    
+    // If there's a specific error about customer not found, handle it
+    if (error.statusCode === 404) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Customer not found' 
+      });
+    }
+    
+    // Handle recommendation service errors
     if (error.message === 'Unable to retrieve product recommendations at this time') {
       return res.status(503).json({ 
         success: false, 
@@ -273,6 +274,7 @@ exports.getCustomerRecommendations = async (req, res, next) => {
         message: error.message 
       });
     }
+    
     next(error);
   }
 };
