@@ -240,49 +240,27 @@ exports.deleteCustomer = async (req, res, next) => {
  */
 exports.getCustomerRecommendations = async (req, res, next) => {
   try {
-    const customerId = req.params.customerId || req.params.id;
-    const limit = parseInt(req.query.limit, 10) || 5;
+    const customerId = req.params.id;
     
-    console.log(`🔍 Getting recommendations for customer: ${customerId}`);
+    console.log(`Fetching recommendations for customer ID: ${customerId}`);
+
+    const recommendations = await RecommendationService.getCustomerRecommendations(customerId);
     
-    // First verify the customer exists
-    try {
-      await CustomerService.getCustomerById(customerId);
-      console.log(`✅ Customer verified: ${customerId}`);
-    } catch (error) {
-      console.error(`❌ Customer verification failed: ${error.message}`);
-      return res.status(404).json({ 
-        success: false, 
-        error: 'Customer not found' 
-      });
+    if (!recommendations || recommendations.length === 0) {
+      return res.status(200).json({ message: "No recommendations found" });
     }
-    
-    // Get recommendations using the recommendation service
-    try {
-      const recommendations = await RecommendationService.getCustomerRecommendations(customerId);
-      console.log(`📊 Recommendations received: ${recommendations.length}`);
-      
-      // Apply the limit parameter
-      const limitedRecommendations = recommendations.slice(0, limit);
-      
-      return res.status(200).json({
-        success: true,
-        count: limitedRecommendations.length,
-        data: limitedRecommendations
-      });
-    } catch (error) {
-      console.error(`❌ Error fetching recommendations: ${error.message}`);
-      return res.status(503).json({ 
-        success: false, 
-        error: 'Recommendation service unavailable', 
-        message: error.message 
-      });
-    }
+
+    return res.status(200).json({
+      success: true,
+      count: recommendations.length,
+      data: recommendations
+    });
   } catch (error) {
-    console.error(`❌ Unexpected error: ${error.message}`);
-    next(error);
+    console.error(`Error: ${error.message}`);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 
 /**
  * @swagger
