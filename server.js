@@ -37,14 +37,15 @@ app.use(express.json());
 // MongoDB connection
 const MONGO_URI = process.env.MONGO_URI;
 
-mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  bufferCommands: false,
-  serverSelectionTimeoutMS: 10000,
-})
+mongoose
+  .connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    bufferCommands: false,
+    serverSelectionTimeoutMS: 10000,
+  })
   .then(() => logger.info('✅ MongoDB connected'))
-  .catch(err => {
+  .catch((err) => {
     logger.error('❌ MongoDB connection error:', err);
     process.exit(1); // Exit process if DB connection fails
   });
@@ -89,33 +90,35 @@ async function startApolloServer() {
     const typesArray = loadFilesSync(path.join(__dirname, 'graphql/schema'));
     const resolversArray = loadFilesSync(path.join(__dirname, 'graphql/resolvers'));
 
-    console.log("🔍 Loaded TypeDefs:", typesArray);
-    console.log("🔍 Loaded Resolvers:", resolversArray);
+    console.log('🔍 Loaded TypeDefs:', typesArray);
+    console.log('🔍 Loaded Resolvers:', resolversArray);
 
     const typeDefs = mergeTypeDefs(typesArray);
     const resolvers = mergeResolvers(resolversArray);
 
-    console.log("✅ Merged TypeDefs and Resolvers");
+    console.log('✅ Merged TypeDefs and Resolvers');
 
     const schema = makeExecutableSchema({
       typeDefs,
       resolvers,
     });
 
-    // ✅ Create Apollo Server with Context for Loaders
+    // ✅ Create Apollo Server with Playground & Introspection Enabled
     const server = new ApolloServer({
       schema,
       context: ({ req }) => {
         const token = req.headers.authorization || '';
-        
+
         return {
           token,
           loaders: {
             customerLoader,
-            customerOrdersLoader: new DataLoader(keys => orderLoader.batchOrders(keys)),
+            customerOrdersLoader: new DataLoader((keys) => orderLoader.batchOrders(keys)),
           },
         };
       },
+      introspection: true, // ✅ Enables schema exploration
+      playground: true, // ✅ Enables Apollo GraphQL Playground
       formatError: (error) => {
         logger.error('GraphQL Error:', error);
         return {
@@ -129,21 +132,21 @@ async function startApolloServer() {
     await server.start();
     server.applyMiddleware({ app, path: '/graphql' });
 
-    logger.info(`🚀 GraphQL Server running at http://localhost:${process.env.PORT || 5000}${server.graphqlPath}`);
+    logger.info(
+      `🚀 GraphQL Server running at http://localhost:${process.env.PORT || 5000}${server.graphqlPath}`
+    );
   } catch (error) {
     logger.error('Failed to start Apollo Server:', error);
   }
 }
 
 // ✅ Start both Apollo and REST server after all middleware is loaded
-async function startServer() {
-  await startApolloServer();
+startApolloServer().then(() => {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
     logger.info(`✅ REST & GraphQL Server running on port ${PORT}`);
   });
-}
-startServer();
+});
 
 // Default route
 app.get('/', (req, res) => {
