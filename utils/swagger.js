@@ -14,7 +14,7 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:5000',
+        url: 'https://e-commerce-api-backend-1.onrender.com/',
         description: 'Development server'
       }
     ],
