@@ -1,4 +1,5 @@
 const CustomerService = require('../services/customerService');
+const RecommendationService = require('../services/recommendationService');
 
 /**
  * @swagger
@@ -102,9 +103,9 @@ exports.getCustomer = async (req, res, next) => {
  *                 type: string
  *               email:
  *                 type: string
- *               custType:
+ *               address:
  *                 type: string
- *               custAddr:
+ *               phone:
  *                 type: string
  *     responses:
  *       201:
@@ -125,11 +126,18 @@ exports.createCustomer = async (req, res, next) => {
 
 /**
  * @swagger
- * /api/customers:
- *   post:
- *     summary: Create a new customer
+ * /api/customers/{id}:
+ *   put:
+ *     summary: Update a customer
  *     tags: [Customers]
- *     description: Adds a new customer to the database
+ *     description: Updates an existing customer's information
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The customer ID
  *     requestBody:
  *       required: true
  *       content:
@@ -140,18 +148,17 @@ exports.createCustomer = async (req, res, next) => {
  *               name:
  *                 type: string
  *                 example: Jayanth
- *               email:
- *                 type: string
- *                 example: jayanth@example.com
- *               custType:
- *                 type: string
- *                 example: premium
- *               custAddr:
+ *               address:
  *                 type: string
  *                 example: 123 Main St, City, Country
+ *               phone:
+ *                 type: string
+ *                 example: +1234567890
  *     responses:
- *       201:
- *         description: Customer created successfully
+ *       200:
+ *         description: Customer updated successfully
+ *       404:
+ *         description: Customer not found
  */
 exports.updateCustomer = async (req, res, next) => {
   try {
@@ -204,28 +211,117 @@ exports.deleteCustomer = async (req, res, next) => {
   }
 };
 
-
+/**
+ * @swagger
+ * /api/customers/{id}/recommendations:
+ *   get:
+ *     summary: Get product recommendations for a customer
+ *     tags: [Customers]
+ *     description: Retrieves personalized product recommendations for a specific customer
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The customer ID
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Maximum number of recommendations to return
+ *     responses:
+ *       200:
+ *         description: List of product recommendations
+ *       404:
+ *         description: Customer not found
+ *       503:
+ *         description: Recommendation service unavailable
+ */
 exports.getCustomerRecommendations = async (req, res, next) => {
   try {
     const customerId = req.params.id;
     const limit = parseInt(req.query.limit, 10) || 5;
     
-    const customerExists = await CustomerService.customerExists(customerId);
-    if (!customerExists) {
-      return res.status(404).json({ success: false, error: 'Customer not found' });
+    // First check if the customer exists using your existing service
+    try {
+      await CustomerService.getCustomerById(customerId);
+    } catch (error) {
+      if (error.statusCode === 404) {
+        return res.status(404).json({ success: false, error: 'Customer not found' });
+      }
+      throw error;
     }
     
-    const recommendations = await CustomerService.getRecommendationsForCustomer(customerId, limit);
+    // Now get recommendations using your recommendation service
+    const recommendations = await RecommendationService.getCustomerRecommendations(customerId);
+    
+    // Apply the limit parameter
+    const limitedRecommendations = recommendations.slice(0, limit);
 
     res.status(200).json({
       success: true,
-      count: recommendations.length,
-      data: recommendations
+      count: limitedRecommendations.length,
+      data: limitedRecommendations
     });
   } catch (error) {
-    if (error.isThirdPartyError) {
-      return res.status(503).json({ success: false, error: 'Recommendation service unavailable', message: error.message });
+    console.error('Error in getCustomerRecommendations:', error);
+    if (error.message === 'Unable to retrieve product recommendations at this time') {
+      return res.status(503).json({ 
+        success: false, 
+        error: 'Recommendation service unavailable', 
+        message: error.message 
+      });
     }
+    next(error);
+  }
+};
+
+/**
+ * @swagger
+ * /api/customers/search:
+ *   get:
+ *     summary: Search customers
+ *     tags: [Customers]
+ *     description: Search customers by name or email
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Search query (minimum 2 characters)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: The page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of customers per page
+ *     responses:
+ *       200:
+ *         description: Search results
+ *       400:
+ *         description: Invalid search query
+ */
+exports.searchCustomers = async (req, res, next) => {
+  try {
+    const query = req.query.q;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    
+    const result = await CustomerService.searchCustomers(query, page, limit);
+    
+    res.status(200).json({
+      success: true,
+      count: result.count,
+      pagination: result.pagination,
+      data: result.data
+    });
+  } catch (error) {
     next(error);
   }
 };
