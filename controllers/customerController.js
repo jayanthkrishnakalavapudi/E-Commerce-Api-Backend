@@ -209,33 +209,7 @@ exports.deleteCustomer = async (req, res, next) => {
   }
 };
 
-/**
- * @swagger
- * /api/customers/{id}/recommendations:
- *   get:
- *     summary: Get customer recommendations
- *     tags: [Customers]
- *     description: Fetches recommendations for a given customer ID
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: The customer ID
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *         description: Number of recommendations to retrieve
- *     responses:
- *       200:
- *         description: Recommendations retrieved successfully
- *       404:
- *         description: Customer not found
- *       503:
- *         description: Recommendation service unavailable
- */
+
 exports.getCustomerRecommendations = async (req, res, next) => {
   try {
     const customerId = req.params.id;
