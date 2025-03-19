@@ -7,12 +7,11 @@ const orderResolvers = {
       try {
         const order = await Order.findById(orderId);
         if (!order) {
-          throw new UserInputError(`Order with ID ${orderId} not found`);
+          throw new UserInputError(`Order not found: ${orderId}`);
         }
         return order.tracking || null;
       } catch (error) {
-        console.error('Error fetching order tracking:', error);
-        throw new ApolloError('Failed to fetch order tracking');
+        throw new ApolloError('Error retrieving tracking information');
       }
     },
 
@@ -20,40 +19,29 @@ const orderResolvers = {
       try {
         const order = await Order.findById(id);
         if (!order) {
-          throw new UserInputError(`Order with ID ${id} not found`);
+          throw new UserInputError(`Order not found: ${id}`);
         }
         return order;
       } catch (error) {
-        console.error('Error fetching order:', error);
-        throw new ApolloError('Failed to fetch order details');
+        throw new ApolloError('Error retrieving order');
       }
     },
   },
 
   Order: {
     id: (order) => order._id.toString(),
-
     tracking: (order) => order.tracking || null,
-
     items: (order) => order.items || [],
-
+    
     customer: async (order, _, { loaders }) => {
+      if (!order.customer) return null;
+      
       try {
-        if (!order.customer) {
-          throw new ApolloError('Customer reference is missing for this order');
-        }
-
         const customerId = order.customer.toString();
         const customer = await loaders.customerLoader.load(customerId);
-
-        if (!customer) {
-          throw new ApolloError(`Customer with ID ${customerId} not found`);
-        }
-
         return customer;
       } catch (error) {
-        console.error('Error loading customer data:', error);
-        throw new ApolloError('Failed to load customer data');
+        throw new ApolloError('Error loading customer data');
       }
     },
   },
