@@ -43,29 +43,6 @@ router.route('/:id')
   .put(updateProduct)
   .delete(deleteProduct);
 
-
-
-/**
- * @swagger
- * /api/orders/{orderId}/tracking:
- *   get:
- *     summary: Get tracking information for an order
- *     tags: [Orders]
- *     parameters:
- *       - in: path
- *         name: orderId
- *         required: true
- *         schema:
- *           type: string
- *         description: The order ID to fetch tracking info for
- *     responses:
- *       200:
- *         description: Tracking information retrieved successfully
- *       404:
- *         description: Order not found or no tracking available
- *       500:
- *         description: Server error
- */
 router.get('/orders/:orderId/tracking', async (req, res) => {
     try {
         const { orderId } = req.params;
