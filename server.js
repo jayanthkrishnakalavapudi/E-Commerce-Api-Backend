@@ -4,8 +4,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const schema = require('./graphql/schema');
 const resolvers = require('./graphql/resolvers');
-const { createOrderLoader, createCustomerOrdersLoader } = require('./graphql/loaders/orderLoader');
-const productLoader = require('./graphql/loaders/productLoader');
+const { createOrderLoader, createCustomerOrdersLoader } = require('./graphql/dataloaders/orderLoader');
+const productLoader = require('./graphql/dataloaders/productLoader');
 const shippingService = require('./services/shippingService'); // Ensure this is imported
 const recommendationService = require('./services/recommendationService'); // Ensure this is imported
 
