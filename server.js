@@ -71,7 +71,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'http://localhost:5000',
+        url: 'https://ecommerce-api-s8u7.onrender.com/',
         description: 'Development Server',
       },
     ],
