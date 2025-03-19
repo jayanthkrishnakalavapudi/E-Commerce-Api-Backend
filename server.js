@@ -15,10 +15,9 @@ const authRoutes = require('./routes/auth');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
-// ✅ Import DataLoaders
-const { createCustomerLoader } = require('./graphql/dataloaders/customerLoader');
+// ✅ Import DataLoaders correctly
+const createCustomerLoader = require('./graphql/dataloaders/customerLoader');
 const { createOrderLoader, createCustomerOrdersLoader } = require('./graphql/dataloaders/orderLoader');
-const { createProductLoader } = require('./graphql/dataloaders/productLoader');
 
 // Load environment variables
 dotenv.config();
@@ -91,15 +90,20 @@ async function startApolloServer() {
     const typesArray = loadFilesSync(path.join(__dirname, 'graphql/schema'));
     const resolversArray = loadFilesSync(path.join(__dirname, 'graphql/resolvers'));
 
+    console.log('🔍 Loaded TypeDefs:', typesArray);
+    console.log('🔍 Loaded Resolvers:', resolversArray);
+
     const typeDefs = mergeTypeDefs(typesArray);
     const resolvers = mergeResolvers(resolversArray);
+
+    console.log('✅ Merged TypeDefs and Resolvers');
 
     const schema = makeExecutableSchema({
       typeDefs,
       resolvers,
     });
 
-    // ✅ Create Apollo Server with GraphQL Playground using plugins
+    // ✅ Create Apollo Server with GraphQL Playground
     const server = new ApolloServer({
       schema,
       context: ({ req }) => {
@@ -108,10 +112,9 @@ async function startApolloServer() {
         return {
           token,
           loaders: {
-            customerLoader: createCustomerLoader(),
+            customerLoader: createCustomerLoader(),  // ✅ Now correctly calling the function
             orderLoader: createOrderLoader(),
             customerOrdersLoader: createCustomerOrdersLoader(),
-            productLoader: createProductLoader(),
           },
         };
       },
