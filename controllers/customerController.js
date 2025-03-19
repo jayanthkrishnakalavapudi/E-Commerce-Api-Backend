@@ -125,18 +125,11 @@ exports.createCustomer = async (req, res, next) => {
 
 /**
  * @swagger
- * /api/customers/{id}:
- *   put:
- *     summary: Update a customer by ID
+ * /api/customers:
+ *   post:
+ *     summary: Create a new customer
  *     tags: [Customers]
- *     description: Updates an existing customer's details
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: The customer ID
+ *     description: Adds a new customer to the database
  *     requestBody:
  *       required: true
  *       content:
@@ -146,17 +139,19 @@ exports.createCustomer = async (req, res, next) => {
  *             properties:
  *               name:
  *                 type: string
+ *                 example: Jayanth
  *               email:
  *                 type: string
+ *                 example: jayanth@example.com
  *               custType:
  *                 type: string
+ *                 example: premium
  *               custAddr:
  *                 type: string
+ *                 example: 123 Main St, City, Country
  *     responses:
- *       200:
- *         description: Customer updated successfully
- *       404:
- *         description: Customer not found
+ *       201:
+ *         description: Customer created successfully
  */
 exports.updateCustomer = async (req, res, next) => {
   try {
