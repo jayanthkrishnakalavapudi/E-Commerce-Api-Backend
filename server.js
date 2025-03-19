@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const morgan = require('morgan');
 const cors = require('cors');
 const { ApolloServer } = require('apollo-server-express');
+const { ApolloServerPluginLandingPageGraphQLPlayground } = require('apollo-server-core');
 const { makeExecutableSchema } = require('@graphql-tools/schema');
 const { loadFilesSync } = require('@graphql-tools/load-files');
 const { mergeTypeDefs, mergeResolvers } = require('@graphql-tools/merge');
@@ -103,7 +104,7 @@ async function startApolloServer() {
       resolvers,
     });
 
-    // ✅ Create Apollo Server with Playground & Introspection Enabled
+    // ✅ Create Apollo Server with GraphQL Playground using plugins
     const server = new ApolloServer({
       schema,
       context: ({ req }) => {
@@ -118,7 +119,7 @@ async function startApolloServer() {
         };
       },
       introspection: true, // ✅ Enables schema exploration
-      playground: true, // ✅ Enables Apollo GraphQL Playground
+      plugins: [ApolloServerPluginLandingPageGraphQLPlayground()], // ✅ Enables GraphQL Playground
       formatError: (error) => {
         logger.error('GraphQL Error:', error);
         return {
