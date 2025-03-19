@@ -25,12 +25,8 @@ dotenv.config();
 // Create Express app
 const app = express();
 
-// ✅ Explicitly Allow CORS from Anywhere
-app.use(cors({
-  origin: '*', // Allow requests from any domain
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+// ✅ Add CORS Middleware
+app.use(cors());
 
 // Middleware for logging HTTP requests
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
@@ -40,6 +36,7 @@ app.use(express.json());
 
 // MongoDB connection
 const MONGO_URI = process.env.MONGO_URI;
+
 mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -49,7 +46,7 @@ mongoose.connect(MONGO_URI, {
   .then(() => logger.info('✅ MongoDB connected'))
   .catch(err => {
     logger.error('❌ MongoDB connection error:', err);
-    process.exit(1);
+    process.exit(1); // Exit process if DB connection fails
   });
 
 // Import routes
@@ -74,8 +71,8 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: process.env.SERVER_URL || 'http://localhost:5000',
-        description: 'Production Server',
+        url: 'https://e-commerce-api-backend-1.onrender.com',
+        description: 'Development Server',
       },
     ],
   },
@@ -130,9 +127,9 @@ async function startApolloServer() {
     });
 
     await server.start();
-    server.applyMiddleware({ app, path: '/graphql', cors: false }); // ✅ Allow CORS for GraphQL
+    server.applyMiddleware({ app, path: '/graphql' });
 
-    logger.info(`🚀 GraphQL Server running at ${process.env.SERVER_URL || 'http://localhost:5000'}${server.graphqlPath}`);
+    logger.info(`🚀 GraphQL Server running at http://localhost:${process.env.PORT || 5000}${server.graphqlPath}`);
   } catch (error) {
     logger.error('Failed to start Apollo Server:', error);
   }
