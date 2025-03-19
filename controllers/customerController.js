@@ -84,6 +84,32 @@ exports.getCustomer = async (req, res, next) => {
   }
 };
 
+/**
+ * @swagger
+ * /api/customers:
+ *   post:
+ *     summary: Create a new customer
+ *     tags: [Customers]
+ *     description: Adds a new customer to the database
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               custType:
+ *                 type: string
+ *               custAddr:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Customer created successfully
+ */
 exports.createCustomer = async (req, res, next) => {
   try {
     const customer = await CustomerService.createCustomer(req.body);
@@ -97,6 +123,41 @@ exports.createCustomer = async (req, res, next) => {
   }
 };
 
+/**
+ * @swagger
+ * /api/customers/{id}:
+ *   put:
+ *     summary: Update a customer by ID
+ *     tags: [Customers]
+ *     description: Updates an existing customer's details
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The customer ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               custType:
+ *                 type: string
+ *               custAddr:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Customer updated successfully
+ *       404:
+ *         description: Customer not found
+ */
 exports.updateCustomer = async (req, res, next) => {
   try {
     const customer = await CustomerService.updateCustomer(req.params.id, req.body);
@@ -114,6 +175,26 @@ exports.updateCustomer = async (req, res, next) => {
   }
 };
 
+/**
+ * @swagger
+ * /api/customers/{id}:
+ *   delete:
+ *     summary: Delete a customer by ID
+ *     tags: [Customers]
+ *     description: Removes a customer from the database
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The customer ID
+ *     responses:
+ *       204:
+ *         description: Customer deleted successfully
+ *       404:
+ *         description: Customer not found
+ */
 exports.deleteCustomer = async (req, res, next) => {
   try {
     const result = await CustomerService.deleteCustomer(req.params.id);
@@ -122,15 +203,39 @@ exports.deleteCustomer = async (req, res, next) => {
       return res.status(404).json({ success: false, error: 'Customer not found' });
     }
 
-    res.status(200).json({
-      success: true,
-      data: {}
-    });
+    res.status(204).send();
   } catch (error) {
     next(error);
   }
 };
 
+/**
+ * @swagger
+ * /api/customers/{id}/recommendations:
+ *   get:
+ *     summary: Get customer recommendations
+ *     tags: [Customers]
+ *     description: Fetches recommendations for a given customer ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The customer ID
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of recommendations to retrieve
+ *     responses:
+ *       200:
+ *         description: Recommendations retrieved successfully
+ *       404:
+ *         description: Customer not found
+ *       503:
+ *         description: Recommendation service unavailable
+ */
 exports.getCustomerRecommendations = async (req, res, next) => {
   try {
     const customerId = req.params.id;
@@ -150,11 +255,7 @@ exports.getCustomerRecommendations = async (req, res, next) => {
     });
   } catch (error) {
     if (error.isThirdPartyError) {
-      return res.status(503).json({
-        success: false,
-        error: 'Recommendation service temporarily unavailable',
-        message: error.message
-      });
+      return res.status(503).json({ success: false, error: 'Recommendation service unavailable', message: error.message });
     }
     next(error);
   }
