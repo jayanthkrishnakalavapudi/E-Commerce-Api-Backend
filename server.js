@@ -19,7 +19,7 @@ const DataLoader = require('dataloader');
 // ✅ Import DataLoaders
 const customerLoader = require('./graphql/dataloaders/customerLoader');
 const orderLoader = require('./graphql/dataloaders/orderLoader');
-const createProductLoader = require('./graphql/dataloaders/productLoader');
+const productLoader = require('./graphql/dataloaders/productLoader');
 
 // Load environment variables
 dotenv.config();
@@ -49,7 +49,7 @@ mongoose
   .then(() => logger.info('✅ MongoDB connected'))
   .catch((err) => {
     logger.error('❌ MongoDB connection error:', err);
-    process.exit(1); // Exit process if DB connection fails
+    process.exit(1);
   });
 
 // Import routes
@@ -92,13 +92,8 @@ async function startApolloServer() {
     const typesArray = loadFilesSync(path.join(__dirname, 'graphql/schema'));
     const resolversArray = loadFilesSync(path.join(__dirname, 'graphql/resolvers'));
 
-    console.log('🔍 Loaded TypeDefs:', typesArray);
-    console.log('🔍 Loaded Resolvers:', resolversArray);
-
     const typeDefs = mergeTypeDefs(typesArray);
     const resolvers = mergeResolvers(resolversArray);
-
-    console.log('✅ Merged TypeDefs and Resolvers');
 
     const schema = makeExecutableSchema({
       typeDefs,
@@ -114,14 +109,14 @@ async function startApolloServer() {
         return {
           token,
           loaders: {
-            productLoader: createProductLoader(), // ✅ Ensuring productLoader is included
-            customerLoader,
-            customerOrdersLoader: new DataLoader((keys) => orderLoader.batchOrders(keys)),
+            customerLoader: new DataLoader((keys) => customerLoader.batchCustomers(keys)),
+            orderLoader: new DataLoader((keys) => orderLoader.batchOrders(keys)),
+            productLoader: new DataLoader((keys) => productLoader.batchProducts(keys)),
           },
         };
       },
-      introspection: true, // ✅ Enables schema exploration
-      plugins: [ApolloServerPluginLandingPageGraphQLPlayground()], // ✅ Enables GraphQL Playground
+      introspection: true,
+      plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
       formatError: (error) => {
         logger.error('GraphQL Error:', error);
         return {
@@ -135,9 +130,7 @@ async function startApolloServer() {
     await server.start();
     server.applyMiddleware({ app, path: '/graphql' });
 
-    logger.info(
-      `🚀 GraphQL Server running at http://localhost:${process.env.PORT || 5000}${server.graphqlPath}`
-    );
+    logger.info(`🚀 GraphQL Server running at http://localhost:${process.env.PORT || 5000}${server.graphqlPath}`);
   } catch (error) {
     logger.error('Failed to start Apollo Server:', error);
   }
