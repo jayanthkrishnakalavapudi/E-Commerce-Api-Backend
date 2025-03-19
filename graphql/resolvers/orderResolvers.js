@@ -29,7 +29,31 @@ const orderResolvers = {
         throw new ApolloError('Failed to fetch order tracking');
       }
     },
+
+    order: async (_, { id }) => {
+      try {
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+          throw new UserInputError('Invalid Order ID format');
+        }
+
+        const order = await Order.findById(new mongoose.Types.ObjectId(id));
+        if (!order) {
+          throw new UserInputError('Order not found');
+        }
+
+        return order;
+      } catch (error) {
+        console.error('Error fetching order:', error);
+        throw new ApolloError('Failed to fetch order');
+      }
+    }
   },
+
+  Order: {
+    id: (order) => order._id.toString(),
+    tracking: (order) => order.tracking || null, // Ensure tracking is properly resolved
+    items: (order) => order.items || [], // Ensure items are properly resolved
+  }
 };
 
 module.exports = orderResolvers;
