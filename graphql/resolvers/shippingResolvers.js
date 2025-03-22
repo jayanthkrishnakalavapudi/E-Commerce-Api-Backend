@@ -3,6 +3,7 @@ const { UserInputError, ApolloError } = require('apollo-server-express');
 
 const shippingResolvers = {
   Query: {
+    // Add a specific query for order tracking by ID
     orderTracking: async (_, { orderId }, { services }) => {
       try {
         // Input validation
@@ -35,7 +36,10 @@ const shippingResolvers = {
         
         // Get tracking info with error handling
         try {
-          const trackingInfo = await services.shippingService.getTrackingInfo(order.trackingNumber || orderId);
+          // Use trackingNumber from order if available, otherwise use a shipping reference ID if that exists
+          const trackingReference = order.trackingNumber || order.shippingReference || orderId;
+          
+          const trackingInfo = await services.shippingService.getTrackingInfo(trackingReference);
           
           // Validate tracking info
           if (!trackingInfo) {
@@ -60,6 +64,34 @@ const shippingResolvers = {
         
         console.error('Unexpected error in orderTracking resolver:', error);
         throw new ApolloError('Unexpected error occurred', 'INTERNAL_SERVER_ERROR');
+      }
+    }
+  },
+  
+  // Add a resolver for the Order.tracking field to make it match the schema
+  Order: {
+    tracking: async (order, _, { services }) => {
+      // Skip if no shipping service available
+      if (!services.shippingService) {
+        return null;
+      }
+      
+      // Skip if not shipped or delivered
+      if (!['shipped', 'delivered'].includes(order.status)) {
+        return null;
+      }
+      
+      // Skip if no tracking number
+      if (!order.trackingNumber && !order.shippingReference) {
+        return null;
+      }
+      
+      try {
+        const trackingReference = order.trackingNumber || order.shippingReference;
+        return await services.shippingService.getTrackingInfo(trackingReference);
+      } catch (error) {
+        console.error(`Error fetching tracking for order ${order.id}:`, error);
+        return null; // Fail gracefully for the field resolver
       }
     }
   }
