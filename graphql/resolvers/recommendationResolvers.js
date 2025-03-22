@@ -53,6 +53,32 @@ const recommendationResolvers = {
         );
       }
     }
+  },
+  
+  // Add a resolver for Customer.recommendations field
+  Customer: {
+    recommendations: async (customer, _, { services, loaders }) => {
+      // If recommendation service is not available, return empty array
+      if (!services.recommendationService) {
+        return [];
+      }
+      
+      try {
+        const recommendations = await services.recommendationService.getRecommendations(customer.id, 5);
+        
+        if (!recommendations || !Array.isArray(recommendations)) {
+          return [];
+        }
+        
+        // Map recommendations to products only as per schema
+        const productIds = recommendations.map(rec => rec.productId);
+        return await Promise.all(productIds.map(id => loaders.productLoader.load(id)))
+          .then(products => products.filter(Boolean));
+      } catch (error) {
+        console.error(`Error fetching recommendations for customer ${customer.id}:`, error);
+        return []; // Return empty array on error for better UX
+      }
+    }
   }
 };
 

@@ -123,6 +123,39 @@ const typeDefs = gql`
     limit: Int
     cursor: String
   }
+
+  type Query {
+    # Customer queries
+    customer(id: ID!): Customer
+    customers(filter: PaginationInput): PaginatedCustomers
+    customerRecommendations(customerId: ID!, limit: Int): [Recommendation!]!
+    
+    # Product queries
+    product(id: ID!): Product
+    products(filter: ProductFilterInput, pagination: PaginationInput): PaginatedProducts
+    
+    # Order queries
+    order(id: ID!): Order
+    orders(filter: OrderFilterInput, pagination: PaginationInput): PaginatedOrders
+    orderTracking(orderId: ID!): ShippingInfo
+  }
+
+  type Mutation {
+    # Customer mutations
+    createCustomer(name: String!, email: String!, address: AddressInput, phone: String): Customer
+    updateCustomer(id: ID!, name: String, email: String, address: AddressInput, phone: String): Customer
+    deleteCustomer(id: ID!): Boolean
+    
+    # Product mutations
+    createProduct(name: String!, description: String!, price: Float!, category: String!, inventory: Int!, imageUrl: String): Product
+    updateProduct(id: ID!, name: String, description: String, price: Float, category: String, inventory: Int, imageUrl: String): Product
+    deleteProduct(id: ID!): Boolean
+    
+    # Order mutations
+    createOrder(customerId: ID!, items: [OrderItemInput!]!, shippingAddress: AddressInput): Order
+    updateOrderStatus(id: ID!, status: String!): Order
+    cancelOrder(id: ID!): Order
+  }
 `;
 
 module.exports = typeDefs;
