@@ -17,15 +17,18 @@ const recommendationResolvers = {
           throw new ApolloError('Recommendation service unavailable', 'SERVICE_UNAVAILABLE');
         }
         
-        // Get recommendations from service
-        const recommendations = await context.recommendationService.getRecommendations(customerId, limit);
+        // Get recommendations from service - using the correct method name
+        const recommendations = await context.recommendationService.getCustomerRecommendations(customerId);
         
         if (!recommendations || !Array.isArray(recommendations)) {
           throw new ApolloError('Invalid recommendations format', 'INVALID_RESPONSE');
         }
         
+        // Apply limit to the recommendations
+        const limitedRecommendations = recommendations.slice(0, limit);
+        
         // Use Promise.all to properly wait for all product loader promises
-        return await Promise.all(recommendations.map(async (rec) => {
+        return await Promise.all(limitedRecommendations.map(async (rec) => {
           try {
             const product = await context.loaders.productLoader.load(rec.productId);
             
@@ -63,14 +66,18 @@ const recommendationResolvers = {
       }
       
       try {
-        const recommendations = await context.recommendationService.getRecommendations(customer.id, 5);
+        // Use the correct method name
+        const recommendations = await context.recommendationService.getCustomerRecommendations(customer.id);
         
         if (!recommendations || !Array.isArray(recommendations)) {
           return [];
         }
         
+        // Limit to 5 recommendations
+        const limitedRecommendations = recommendations.slice(0, 5);
+        
         // Map recommendations to products only as per schema
-        const productIds = recommendations.map(rec => rec.productId);
+        const productIds = limitedRecommendations.map(rec => rec.productId);
         return await Promise.all(productIds.map(id => context.loaders.productLoader.load(id)))
           .then(products => products.filter(Boolean));
       } catch (error) {
