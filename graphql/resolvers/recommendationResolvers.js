@@ -3,22 +3,22 @@ const { UserInputError, ApolloError } = require('apollo-server-express');
 
 const recommendationResolvers = {
   Query: {
-    customerRecommendations: async (_, { customerId, limit = 5 }, { services, loaders }) => {
+    customerRecommendations: async (_, { customerId, limit = 5 }, context) => {
       try {
         // Validate customer exists
-        const customer = await loaders.customerLoader.load(customerId);
+        const customer = await context.loaders.customerLoader.load(customerId);
         
         if (!customer) {
           throw new UserInputError('Customer not found');
         }
         
         // Validate recommendation service is available
-        if (!services.recommendationService) {
+        if (!context.recommendationService) {
           throw new ApolloError('Recommendation service unavailable', 'SERVICE_UNAVAILABLE');
         }
         
         // Get recommendations from service
-        const recommendations = await services.recommendationService.getRecommendations(customerId, limit);
+        const recommendations = await context.recommendationService.getRecommendations(customerId, limit);
         
         if (!recommendations || !Array.isArray(recommendations)) {
           throw new ApolloError('Invalid recommendations format', 'INVALID_RESPONSE');
@@ -27,7 +27,7 @@ const recommendationResolvers = {
         // Use Promise.all to properly wait for all product loader promises
         return await Promise.all(recommendations.map(async (rec) => {
           try {
-            const product = await loaders.productLoader.load(rec.productId);
+            const product = await context.loaders.productLoader.load(rec.productId);
             
             if (!product) {
               console.warn(`Product not found for recommendation: ${rec.productId}`);
@@ -55,16 +55,15 @@ const recommendationResolvers = {
     }
   },
   
-  // Add a resolver for Customer.recommendations field
   Customer: {
-    recommendations: async (customer, _, { services, loaders }) => {
+    recommendations: async (customer, _, context) => {
       // If recommendation service is not available, return empty array
-      if (!services.recommendationService) {
+      if (!context.recommendationService) {
         return [];
       }
       
       try {
-        const recommendations = await services.recommendationService.getRecommendations(customer.id, 5);
+        const recommendations = await context.recommendationService.getRecommendations(customer.id, 5);
         
         if (!recommendations || !Array.isArray(recommendations)) {
           return [];
@@ -72,7 +71,7 @@ const recommendationResolvers = {
         
         // Map recommendations to products only as per schema
         const productIds = recommendations.map(rec => rec.productId);
-        return await Promise.all(productIds.map(id => loaders.productLoader.load(id)))
+        return await Promise.all(productIds.map(id => context.loaders.productLoader.load(id)))
           .then(products => products.filter(Boolean));
       } catch (error) {
         console.error(`Error fetching recommendations for customer ${customer.id}:`, error);

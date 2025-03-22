@@ -3,7 +3,7 @@ const { UserInputError, ApolloError } = require('apollo-server-express');
 
 const shippingResolvers = {
   Query: {
-    orderTracking: async (_, { orderId }, { services }) => {
+    orderTracking: async (_, { orderId }, context) => {
       try {
         // Input validation
         if (!orderId) {
@@ -23,27 +23,20 @@ const shippingResolvers = {
           throw new UserInputError('Order not found');
         }
         
-        // Skip status check for testing purposes
-        // Comment this back in when ready for production
-        /*
-        if (!['shipped', 'delivered'].includes(order.status)) {
-          return null;
-        }
-        */
-        
         // Check if we have a tracking number
         if (!order.trackingNumber) {
           return null;
         }
         
         // Validate shipping service availability
-        if (!services.shippingService) {
+        if (!context.shippingService) {
+          console.error('Shipping service is not available in context');
           throw new ApolloError('Shipping service unavailable', 'SERVICE_UNAVAILABLE');
         }
         
         // Get tracking info with error handling
         try {
-          const trackingInfo = await services.shippingService.getTrackingInfo(order.trackingNumber);
+          const trackingInfo = await context.shippingService.getTrackingInfo(order.trackingNumber);
           
           // If no tracking info is returned, create a default response
           if (!trackingInfo) {
@@ -90,19 +83,19 @@ const shippingResolvers = {
   },
   
   Order: {
-    tracking: async (order, _, { services }) => {
+    tracking: async (order, _, context) => {
       // Skip if no tracking number
       if (!order.trackingNumber) {
         return null;
       }
       
       // Skip if shipping service is not available
-      if (!services.shippingService) {
+      if (!context.shippingService) {
         return null;
       }
       
       try {
-        const trackingInfo = await services.shippingService.getTrackingInfo(order.trackingNumber);
+        const trackingInfo = await context.shippingService.getTrackingInfo(order.trackingNumber);
         
         if (!trackingInfo) {
           return {
