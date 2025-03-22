@@ -2,7 +2,9 @@ const express = require('express');
 const {
   getCustomers,
   getCustomer,
-  createCustomer
+  createCustomer,
+  updateCustomer,
+  deleteCustomer
 } = require('../controllers/customerController');
 const { getCustomerRecommendations } = require('../controllers/recommendationController');
 const orderRoutes = require('./orders');
@@ -17,9 +19,11 @@ router.route('/')
   .post(createCustomer);
 
 router.route('/:id')
-  .get(getCustomer);
+  .get(getCustomer)
+  .put(updateCustomer)
+  .delete(deleteCustomer);
 
-  router.route('/:customerId/recommendations')
+router.route('/:customerId/recommendations')
   .get(getCustomerRecommendations);
 
 module.exports = router;

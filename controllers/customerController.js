@@ -27,18 +27,25 @@ const CustomerService = require('../services/customerService');
  *         description: Number of customers per page
  *     responses:
  *       200:
- *         description: List of customers
+ *         description: A list of customers
  */
 exports.getCustomers = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
+    const searchQuery = req.query.search;
     
-    const result = await CustomerService.getCustomers(page, limit);
+    let result;
+    
+    if (searchQuery) {
+      result = await CustomerService.searchCustomers(searchQuery, page, limit);
+    } else {
+      result = await CustomerService.getCustomers(page, limit);
+    }
 
     res.status(200).json({
       success: true,
-      count: result.data.length,
+      count: result.count,
       pagination: result.pagination,
       data: result.data
     });
@@ -53,7 +60,7 @@ exports.getCustomers = async (req, res, next) => {
  *   get:
  *     summary: Get a single customer by ID
  *     tags: [Customers]
- *     description: Fetches a customer using their unique ID
+ *     description: Fetches the details of a specific customer
  *     parameters:
  *       - in: path
  *         name: id
@@ -63,17 +70,13 @@ exports.getCustomers = async (req, res, next) => {
  *         description: The customer ID
  *     responses:
  *       200:
- *         description: Customer data retrieved successfully
+ *         description: Customer details retrieved successfully
  *       404:
  *         description: Customer not found
  */
 exports.getCustomer = async (req, res, next) => {
   try {
     const customer = await CustomerService.getCustomerById(req.params.id);
-
-    if (!customer) {
-      return res.status(404).json({ success: false, error: 'Customer not found' });
-    }
 
     res.status(200).json({
       success: true,
@@ -90,25 +93,43 @@ exports.getCustomer = async (req, res, next) => {
  *   post:
  *     summary: Create a new customer
  *     tags: [Customers]
- *     description: Adds a new customer to the database
+ *     description: Registers a new customer in the system
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [name, email]
  *             properties:
  *               name:
  *                 type: string
+ *                 example: "John Doe"
  *               email:
  *                 type: string
- *               address:
- *                 type: string
+ *                 format: email
+ *                 example: "john.doe@example.com"
  *               phone:
  *                 type: string
+ *                 example: "+1234567890"
+ *               address:
+ *                 type: object
+ *                 properties:
+ *                   street:
+ *                     type: string
+ *                   city:
+ *                     type: string
+ *                   state:
+ *                     type: string
+ *                   zipCode:
+ *                     type: string
+ *                   country:
+ *                     type: string
  *     responses:
  *       201:
  *         description: Customer created successfully
+ *       400:
+ *         description: Invalid input data or customer already exists
  */
 exports.createCustomer = async (req, res, next) => {
   try {
@@ -127,9 +148,9 @@ exports.createCustomer = async (req, res, next) => {
  * @swagger
  * /api/customers/{id}:
  *   put:
- *     summary: Update a customer
+ *     summary: Update an existing customer
  *     tags: [Customers]
- *     description: Updates an existing customer's information
+ *     description: Modifies the details of an existing customer
  *     parameters:
  *       - in: path
  *         name: id
@@ -146,13 +167,23 @@ exports.createCustomer = async (req, res, next) => {
  *             properties:
  *               name:
  *                 type: string
- *                 example: Jayanth
- *               address:
- *                 type: string
- *                 example: 123 Main St, City, Country
+ *                 example: "John Smith"
  *               phone:
  *                 type: string
- *                 example: +1234567890
+ *                 example: "+1987654321"
+ *               address:
+ *                 type: object
+ *                 properties:
+ *                   street:
+ *                     type: string
+ *                   city:
+ *                     type: string
+ *                   state:
+ *                     type: string
+ *                   zipCode:
+ *                     type: string
+ *                   country:
+ *                     type: string
  *     responses:
  *       200:
  *         description: Customer updated successfully
@@ -162,10 +193,6 @@ exports.createCustomer = async (req, res, next) => {
 exports.updateCustomer = async (req, res, next) => {
   try {
     const customer = await CustomerService.updateCustomer(req.params.id, req.body);
-
-    if (!customer) {
-      return res.status(404).json({ success: false, error: 'Customer not found' });
-    }
 
     res.status(200).json({
       success: true,
@@ -180,9 +207,9 @@ exports.updateCustomer = async (req, res, next) => {
  * @swagger
  * /api/customers/{id}:
  *   delete:
- *     summary: Delete a customer by ID
+ *     summary: Delete a customer
  *     tags: [Customers]
- *     description: Removes a customer from the database
+ *     description: Removes a customer from the system
  *     parameters:
  *       - in: path
  *         name: id
@@ -191,68 +218,20 @@ exports.updateCustomer = async (req, res, next) => {
  *           type: string
  *         description: The customer ID
  *     responses:
- *       204:
+ *       200:
  *         description: Customer deleted successfully
  *       404:
  *         description: Customer not found
+ *       400:
+ *         description: Cannot delete customer with orders
  */
 exports.deleteCustomer = async (req, res, next) => {
   try {
-    const result = await CustomerService.deleteCustomer(req.params.id);
+    await CustomerService.deleteCustomer(req.params.id);
 
-    if (!result) {
-      return res.status(404).json({ success: false, error: 'Customer not found' });
-    }
-
-    res.status(204).send();
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * @swagger
- * /api/customers/search:
- *   get:
- *     summary: Search customers
- *     tags: [Customers]
- *     description: Search customers by name or email
- *     parameters:
- *       - in: query
- *         name: q
- *         required: true
- *         schema:
- *           type: string
- *         description: Search query (minimum 2 characters)
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *         description: The page number for pagination
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *         description: Number of customers per page
- *     responses:
- *       200:
- *         description: Search results
- *       400:
- *         description: Invalid search query
- */
-exports.searchCustomers = async (req, res, next) => {
-  try {
-    const query = req.query.q;
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10;
-    
-    const result = await CustomerService.searchCustomers(query, page, limit);
-    
     res.status(200).json({
       success: true,
-      count: result.count,
-      pagination: result.pagination,
-      data: result.data
+      data: {}
     });
   } catch (error) {
     next(error);
