@@ -60,7 +60,7 @@ const customerResolvers = {
         throw new UserInputError('Customer not found');
       }
       
-      await customer.remove();
+      await Customer.findByIdAndDelete(id);
       return true;
     }
   },
